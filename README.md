@@ -1,77 +1,127 @@
-# BatteryGuard for WUJIE T142 STX
+# 机械革命无界 14X Pro 电池与性能管家
 
-Windows 11 charge protection, FN+X performance profiles, display refresh policy, cooling and a tray control panel for the **WUJIE Series-T142-STX** motherboard with **T142_STXKRK_V13** BIOS.
+面向机械革命无界 14X Pro（T142 STX）的 Windows 中文控制工具，支持限充与停充、FN+X 性能切换、CPU 功率控制、风扇曲线、刷新率联动和托盘自启动。
 
-This is a source-only preview for this specific machine. Other EC layouts, firmware versions and AMD platforms are not supported. Installation checks the board and BIOS before starting hardware control.
+项目内部代码名称为 **BatteryGuard**。本项目独立开发，与机械革命官方没有隶属关系。
 
-## Features
+> 当前为源码预览版，仅在下列主板与固件组合上验证。源码包不包含第三方 DLL、SYS 或 EXE。其他型号、BIOS 版本和平台尚未适配。
 
-- Charge limit and pause controls use the independently verified SMBus E path, with current readback and a worker/supervisor. Firmware reassertions are corrected; repeated pause notifications are suppressed.
-- FN+X selects Quiet, Normal and Performance. Battery use allows Quiet and Normal. The brief on-screen message shows the mode only.
-- CPU limits: Quiet 30 W sustained / 35 W fast; Normal 45 / 54 W; externally powered Performance 80 / 96 W with the factory 99 C thermal setting. DC and the tested Type-C source use the same CPU package. Whole-machine consumption is a separate measurement. Known Type-C budgets below 45 W retain the Normal cap; unknown sources remain capped.
-- Performance requests apply the full 19-command native firmware profile. Valid firmware changes are reapplied in the same session; failed native sessions are not repeatedly remapped.
-- Battery use selects 60 Hz; external power restores the highest available display refresh rate.
-- Performance cooling requests both fans at 100% from 85 C, maintained every 50 ms. Other modes, battery operation and worker failure restore automatic fans. Duty readback is reported; manual-mode RPM is not presented as a measured value.
-- The WPF interface has separate Performance, Fans, Charge and Settings tabs, a tray icon and login startup. Temporary JSON sharing conflicts clear automatically after a successful refresh; genuine hardware/action errors remain visible.
+## 支持范围
 
-## Installation
+| 项目 | 已验证环境 |
+| --- | --- |
+| 主板 | `WUJIE Series-T142-STX` |
+| BIOS | `T142_STXKRK_V13` |
+| 系统 | Windows 11；64 位 Windows PowerShell 5.1、.NET Framework |
+| 原生充电保护提示 | 可选，仅验证 Windows 内部版本 `26200` |
 
-Use a permanent local folder for the clone; scheduled tasks continue to reference it. Required environment: 64-bit Windows PowerShell 5.1, .NET Framework, administrator access and the board/BIOS above. Obtain and verify the external libraries as described in [DEPENDENCIES.md](DEPENDENCIES.md). They are deliberately not included in this source package.
+安装入口会检查主板和 BIOS。请勿仅因同为机械革命或外观相似，就将本仓库用于其他设备。
 
-From an **administrator Windows PowerShell 5.1** window in the source directory:
+## 功能
+
+- **充电保护**：设置电量上限、暂停和恢复充电。使用已验证的独立 SMBus E 通道，并回读充电电流；固件恢复充电时重新执行保护，避免重复推送停充通知。
+- **性能模式**：支持节能、普通、性能三档及 FN+X 提示。离电时允许节能和普通；按键提示只显示模式名称和图标。
+- **完整功率配置**：下发本机原厂配置链路的 19 条请求，并核对实际限额。固件合法回写后在原会话内重新应用；原生访问失败时退出，不反复重建硬件访问会话。
+- **散热控制**：默认曲线在接电性能档、温度达到 85°C 时请求双风扇 100%，每 50 毫秒维护。普通、节能、离电及异常退出时恢复自动；手动模式下不把不可靠的 RPM 显示为实测转速。
+- **刷新率联动**：离电切换至 60 Hz，接电恢复显示器可用的最高刷新率。
+- **中文界面**：性能、散热、充电、设置分别放在独立标签页；支持托盘唤起和登录自动运行。
+- **提示恢复**：短暂的状态文件占用恢复后，清除旧刷新错误；保留真实硬件故障和操作失败。含中文的 PowerShell 脚本使用带 BOM 的 UTF-8，避免 Windows PowerShell 5.1 将提示读成乱码。
+
+### CPU 功率策略
+
+| 模式 | 持续功率 | Fast 短时功率 | 条件 |
+| --- | --- | --- | --- |
+| 节能 | 30 W | 35 W | 接电、离电均可 |
+| 普通 | 45 W | 54 W | 接电、离电均可，保留各自的原厂动态参数 |
+| 性能 | 80 W | 96 W | DC 或已验证的 Type-C 供电，原厂温限 99°C |
+
+这些数值是 **CPU 限额，不是整机功耗**。DC 和已验证的 Type-C 使用同一组 80/96 W 配置。已知 Type-C 预算低于 45 W 或供电来源不明时，性能请求保留普通档限额；实际功耗还取决于负载、温度和供电条件。
+
+## 安装
+
+将源码放在长期保留的本地目录；计划任务会继续引用它。先按 [依赖说明](DEPENDENCIES.md) 取得第三方文件，核对固定版本和 SHA-256。程序不调整 Windows 驱动阻止列表、内存完整性或安全启动设置。
+
+在源码目录打开 **管理员身份的 64 位 Windows PowerShell 5.1**：
 
 ```powershell
+# 预览安装动作，不修改系统
 .\Setup.ps1 -WhatIf
+
+# 安装并启动登录策略和托盘
 .\Setup.ps1
 ```
 
-Setup preserves existing charge/fan preferences, checks dependency hashes, compiles the performance backend and configures login startup plus the hidden tray panel. It does not force Performance at every boot: policy follows the actual firmware mode and current power source. Default charge limit is 80%, with pause off. Default cooling is restricted to externally powered Performance.
+安装保留已有的充电、风扇设置，检查依赖校验值，编译性能后台并配置登录启动。首次使用的默认充电上限为 **80%**，暂停关闭；默认风扇曲线仅用于接电的性能档。每次登录跟随固件当前模式和供电状态，不强制切换性能档。
 
-Windows native charge-protection text is an optional, build-specific integration:
+### 可选：Windows 原生充电保护提示
+
+仅在已验证的 Windows 内部版本 `26200` 上启用：
 
 ```powershell
 .\Setup.ps1 -NativeStatus
 ```
 
-That interface is tested only on Windows build **26200**. It changes the native protection notification; the taskbar heart overlay has **not** been achieved on the tested shell. The app's charge state is based on actual current. On other builds omit the option. The integration is not an ACPI patch or a replacement battery device.
+此功能更新原生充电保护通知。**已实现文字提示，尚未实现任务栏电池旁的爱心图标。** 其他 Windows 版本请省略此选项；应用内充电状态按实际电流显示。该功能不修改 ACPI 电池设备，也不替换系统电池驱动。
 
-## Daily startup
+## 日常使用与自动运行
 
-`BatteryGuard-PerformanceTelemetry` and `BatteryGuard-BackgroundRecovery` run at the user's login. Recovery maintains the charge observer/supervisor, power events, FN+X/display policy and fan worker. `HKCU Run\BatteryGuardPanel` opens the interface hidden in the tray; clicking the tray icon opens it. The optional `BatteryGuard-NativeStatus` task runs at system startup as SYSTEM.
+- `BatteryGuard-PerformanceTelemetry`：用户登录时启动性能后台。
+- `BatteryGuard-BackgroundRecovery`：用户登录时维护观察器、充电守护、电源事件、FN+X、刷新率和风扇后台。
+- `HKCU Run\BatteryGuardPanel`：登录后以托盘形式启动界面；点击托盘即可打开。
+- `BatteryGuard-NativeStatus`：可选，系统启动时以 SYSTEM 身份运行原生保护提示助手。
 
-An explicit Exit closes the panel for the current login session while the hardware policies continue. No reboot, logout or hibernation is performed by Setup or Uninstall.
+关闭窗口收起到托盘；显式退出关闭本次登录会话的界面，硬件策略仍运行。安装、卸载入口均不执行电脑重启、注销或休眠。
 
-## Restore and remove startup policies
+默认风扇曲线：
 
-Do **not** terminate the charge worker as an uninstall method: stopping it alone can leave the charge-current register at zero.
+```text
+40:35, 50:40, 60:55, 70:70, 80:90, 85:100
+```
+
+格式为“温度 °C : 风扇占空比 %”，可在散热页修改。手动模式显示占空比和控制状态，不将占空比换算成未经测量的转速。
+
+## 恢复原厂控制与移除启动策略
+
+**不要直接终止充电进程来卸载。** 进程停止本身不会恢复充电电流寄存器，可能继续保持停充。
 
 ```powershell
 .\Uninstall.ps1 -WhatIf
 .\Uninstall.ps1
 ```
 
-Uninstall first turns charge protection off through the worker and waits for the matching applied revision and confirmed release. If our pause is active, external power must be connected so restoration can be verified. If the battery cannot yet request charging or the worker is unavailable, it stops with an error and leaves the workers installed. It then prevents respawn, requests cooperative shutdown, verifies automatic fans, restores an OEM Normal/Quiet profile and removes only owned startup entries. Source files, installed dependency files, preferences and diagnostics are retained for inspection. Stop/maintenance flags are retained; inspect and remove those explicit flags before a later reinstall.
+卸载先通过运行中的守护关闭充电保护，等待对应设置版本被执行并确认解除停充。若本程序正在暂停充电，需要连接外部电源，才能回验恢复结果；电池尚不允许充电或守护不可用时，卸载报错并保留后台，不假装已经恢复。
 
-The new unified installer/uninstaller has been checked offline and with `-WhatIf`. A clean-machine installation and live uninstall have not been exercised on the production laptop, to avoid disturbing its verified controls. The individual installed policies have been verified running on the target laptop.
+确认解除后，程序阻止后台重启，请求各进程自行退出，检查自动风扇，恢复原厂普通或节能模式，并移除属于本安装的启动项。源码、已安装的依赖、设置、诊断文件及停机维护标记会保留供检查；再次安装前需检查这些标记。
 
-## Verification and development
+**统一安装、卸载入口目前完成离线检查及 `-WhatIf` 验证，尚未做全新系统安装和生产电脑上的实际卸载验收。** 已部署的各项独立后台策略已在目标电脑验证运行。
 
-Run software-only validation without loading hardware drivers or stress-testing the laptop:
+## 测试与开发
+
+在 Windows PowerShell 5.1 中运行软件验证：
 
 ```powershell
 .\VerifySourcePackage.ps1
 ```
 
-It parses all PowerShell sources, compiles the C# components without executing their entry points, runs the power-policy, OEM mailbox transport, RAPL conversion, fan policy/transport, path configuration and panel-recovery tests, and previews Setup/Uninstall. Tests use controlled transport/file fixtures; they do not lock live runtime files.
+验证包括 PowerShell 语法与中文脚本编码检查、C# 编译、功率策略、原厂 mailbox 请求顺序、RAPL 换算、风扇策略和传输、安装路径配置、提示恢复与中文解码，以及安装卸载预览。测试不执行硬件入口、不压测 CPU，也不锁定真实运行状态文件。
 
-`BuildSourcePackage.ps1` exports an explicit source allowlist, sanitized firmware facts and safe defaults. Personal session logs, runtime files, memory/firmware dumps, screenshots, benchmarks and obsolete diagnostic/repair scripts are excluded. `agent/progress.jsonl` and `agent/findings.jsonl` are the two development journals; they are private and ignored by Git. Runtime diagnostic files are also ignored.
+`BuildSourcePackage.ps1` 按明确的文件清单导出源码，保留安全默认设置和必要固件参数，排除个人会话日志、运行状态、固件与内存转储、截图、压力测试工具和旧诊断修复脚本。
 
-## Validation on the target machine
+开发过程只维护 `agent/progress.jsonl`、`agent/findings.jsonl` 两份工作日志，成功与失败均登记；它们及运行诊断文件不进入公开 Git 仓库。
 
-Externally powered CPU Package power reached approximately 92.28 W; the independent RAPL measurement was 92.21 W at approximately 95.71 C. Quiet/Normal/Performance limit readback and all 19 acknowledgements were checked. A battery cycle verified the battery profiles, automatic fans and 60 Hz, then restored 80/96 W and the highest refresh on reconnection. High-temperature duty readback showed 99-100% before maintenance and 100% after it. These are measurements from one machine, not performance guarantees for other devices.
+### 本机验证记录
 
-Type-C PD renegotiation/repair and increasing the factory temperature limit are outside this release. The reported adapter budget is firmware telemetry, not a measurement of whole-machine consumption. No additional idle-power saving beyond Quiet's verified factory policy and the battery refresh policy is claimed.
+- 接电负载下 CPU Package 约 **92.28 W**，独立 RAPL 约 **92.21 W**，温度约 **95.71°C**。
+- 接电三档均检查实际限额及完整 19 条请求的确认结果。
+- 拔电验证节能、普通档、自动风扇和 60 Hz；重新接电后恢复 80/96 W 和最高刷新率。
+- 高温风扇维护前占空比为 99–100%，维护后两侧均回读 100%。
 
-## License
+以上为一台目标电脑的验证结果，不构成其他设备上的性能保证。当前版本不包含 Type-C PD 协议降级修复，也不提高原厂温限。节能策略保留已验证的节能档及刷新率联动，不声称已实现额外待机省电优化。
 
-Original project code is MIT licensed. External dependencies and the fan-control reference retain their own licenses; see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Do not add DLL/SYS binaries to a public release without preserving and reviewing their upstream licensing obligations.
+## Linux
+
+当前实现仅支持 Windows。已确认的固件协议和控制策略可作为 Linux 移植基础，但硬件访问、ACPI/WMI 事件、后台服务、界面和显示集成需要适配；尚未在这台电脑的 Linux 系统中验证。
+
+## 许可证
+
+原始项目代码采用 [MIT 许可证](LICENSE)。第三方依赖及风扇控制参考项目保留各自许可证，见 [第三方声明](THIRD_PARTY_NOTICES.md)。公开分发第三方 DLL/SYS 前，需要保留并核对相应的许可证及源码提供义务；本项目的 MIT 许可证不覆盖第三方组件。

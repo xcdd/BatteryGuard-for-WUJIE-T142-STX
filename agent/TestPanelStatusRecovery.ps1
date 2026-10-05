@@ -14,7 +14,9 @@ try {
  if(-not $failure -or (Get-PanelRefreshErrorKind $failure)-ne 'transient'){throw 'A real exclusive JSON-file lock must be classified as a transient refresh failure'}
  $locked.Dispose();$locked=$null
  if((Read-ControlJson $tempFile).phase-ne 'curve'){throw 'The state did not become readable after releasing the lock'}
- if((Get-PanelRecoveredMessage 'refresh')-ne '状态已恢复'){throw 'A recovered refresh must replace its stale error banner'}
+ # ASCII-only fixture: it must not be corrupted by the same source decoding as the policy.
+ $expectedRecovery=-join (@(0x72B6,0x6001,0x5DF2,0x6062,0x590D)|ForEach-Object {[char]$_})
+ if((Get-PanelRecoveredMessage 'refresh')-ne $expectedRecovery){throw 'Recovered Chinese status was corrupted by Windows PowerShell source decoding'}
  if($null-ne (Get-PanelRecoveredMessage 'action')){throw 'A healthy refresh must not erase an unconfirmed user action error'}
  if($null-ne (Get-PanelRecoveredMessage 'hardware')){throw 'A healthy refresh must not erase a genuine hardware error'}
  $denied=[Management.Automation.ErrorRecord]::new([UnauthorizedAccessException]::new('denied'),'test',[Management.Automation.ErrorCategory]::PermissionDenied,$null)

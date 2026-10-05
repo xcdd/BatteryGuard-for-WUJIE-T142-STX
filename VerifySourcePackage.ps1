@@ -6,6 +6,10 @@ $nestedExport=(Join-Path $PSScriptRoot 'release').TrimEnd('\')+'\'
 $scripts=@(Get-ChildItem -LiteralPath $PSScriptRoot -Filter '*.ps1' -Recurse|Where-Object {-not $_.FullName.StartsWith($nestedExport,[StringComparison]::OrdinalIgnoreCase)})
 if($scripts.Count-eq 0){throw 'No PowerShell files were discovered; syntax verification cannot pass'}
 foreach($file in $scripts){
+    $bytes=[IO.File]::ReadAllBytes($file.FullName)
+    $text=[Text.Encoding]::UTF8.GetString($bytes)
+    $hasBom=$bytes.Length-ge 3 -and $bytes[0]-eq 0xEF -and $bytes[1]-eq 0xBB -and $bytes[2]-eq 0xBF
+    if($text-match '[^\x00-\x7F]' -and -not $hasBom){throw ($file.Name+': non-ASCII PowerShell source requires UTF-8 BOM for Windows PowerShell 5.1')}
     $tokens=$null;$errors=$null
     [void][Management.Automation.Language.Parser]::ParseFile($file.FullName,[ref]$tokens,[ref]$errors)
     foreach($error in $errors){$parseFailures+=@($file.Name+': '+$error.Message)}

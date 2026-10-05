@@ -1,4 +1,4 @@
-function Get-PanelRefreshErrorKind($record) {
+﻿function Get-PanelRefreshErrorKind($record) {
     $exception=$record.Exception
     while($exception){
         if($exception -is [IO.IOException]){
