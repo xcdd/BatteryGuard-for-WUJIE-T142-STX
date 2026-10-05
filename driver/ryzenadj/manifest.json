@@ -1,0 +1,47 @@
+{
+    "version":  "v0.19.0",
+    "release":  "https://github.com/FlyGoat/RyzenAdj/releases/tag/v0.19.0",
+    "used_functions":  [
+                           "get_apu_slow_limit",
+                           "get_apu_slow_value",
+                           "get_fast_limit",
+                           "get_fast_value",
+                           "get_slow_limit",
+                           "get_socket_power",
+                           "get_stapm_limit",
+                           "get_stapm_value",
+                           "get_table_ver",
+                           "get_tctl_temp",
+                           "get_tctl_temp_value",
+                           "get_vrm_current",
+                           "get_vrm_current_value",
+                           "init_ryzenadj",
+                           "init_table",
+                           "refresh_table",
+                           "set_apu_skin_temp_limit",
+                           "set_apu_slow_limit",
+                           "set_fast_limit",
+                           "set_skin_temp_power_limit",
+                           "set_slow_limit",
+                           "set_stapm_limit",
+                           "set_tctl_temp"
+                       ],
+    "files":  [
+                  {
+                      "name":  "inpoutx64.dll",
+                      "sha256":  "5F27ED4D5CD58A1EE23DEEB802E09E73F3A1D884CE2135F6E827F67B171269E7"
+                  },
+                  {
+                      "name":  "libryzenadj.dll",
+                      "sha256":  "498DF2E9278C33BA7BA7BFB8BDCA93033941896D9E156C37AF382D31482EDCD5"
+                  },
+                  {
+                      "name":  "WinRing0x64.dll",
+                      "sha256":  "A746FD5728E7485F741CC330A279674BC8590B1B8007D8614046C49F58698485"
+                  },
+                  {
+                      "name":  "WinRing0x64.sys",
+                      "sha256":  "11BD2C9F9E2397C9A16E0990E4ED2CF0679498FE0FD418A3DFDAC60B5C160EE5"
+                  }
+              ]
+}

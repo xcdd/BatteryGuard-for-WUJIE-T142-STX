@@ -1,0 +1,15 @@
+{
+  "enabled": true,
+  "performance_mode_only": true,
+  "minimum_duty": 35,
+  "maximum_duty": 100,
+  "firmware_takeover_temperature": 90,
+  "curve": [
+    {"temperature": 40, "duty": 35},
+    {"temperature": 50, "duty": 40},
+    {"temperature": 60, "duty": 55},
+    {"temperature": 70, "duty": 70},
+    {"temperature": 80, "duty": 90},
+    {"temperature": 85, "duty": 100}
+  ]
+}

@@ -1,0 +1,17 @@
+agent/*
+!agent/*.ps1
+!agent/firmware-power-table.json
+driver/**/*.dll
+driver/**/*.sys
+*.exe
+*.dll
+*.pdb
+*.tmp
+*.log
+*.zip
+release/
+work/
+ssdt/
+logs/
+screenshots/
+__pycache__/

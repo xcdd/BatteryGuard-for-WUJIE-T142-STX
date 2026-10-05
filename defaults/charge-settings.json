@@ -1,0 +1,7 @@
+{
+  "enabled": true,
+  "limit": 80,
+  "pause": false,
+  "hysteresis": 3,
+  "revision": "initial"
+}
