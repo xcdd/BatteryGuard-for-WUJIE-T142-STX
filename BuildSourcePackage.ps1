@@ -20,7 +20,7 @@ $files=@(
     'licenses\wujie-fan-control-MIT.txt','defaults\charge-settings.json','defaults\fan-settings.json',
     'agent\ObserveChargeSession.ps1','agent\NativeProtectionHelper.ps1',
     'agent\TestSourceRootConfiguration.ps1','agent\TestPerformancePowerPolicy.ps1','agent\TestOemSurfaceMailbox.ps1',
-    'agent\TestFanFullDuty.ps1','agent\VerifyFanPolicy.ps1','agent\TestRaplPower.ps1','agent\TestPanelStatusRecovery.ps1'
+    'agent\TestFanFullDuty.ps1','agent\VerifyFanPolicy.ps1','agent\TestRaplPower.ps1','agent\TestPanelStatusRecovery.ps1','agent\TestTrayStartupRecovery.ps1','agent\TestPanelStartupRegistry.ps1'
 )
 foreach($relative in $files){if(-not(Test-Path -LiteralPath (Join-Path $sourceRoot $relative) -PathType Leaf)){throw ('Allowlisted source is missing: '+$relative)}}
 New-Item -ItemType Directory -Path $destinationRoot -Force|Out-Null

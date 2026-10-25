@@ -6,7 +6,10 @@ $scriptFile=Join-Path $PSScriptRoot 'BackgroundRecovery.ps1'
 $taskName='BatteryGuard-BackgroundRecovery'
 $action=New-ScheduledTaskAction -Execute $exe -Argument ('-NoProfile -WindowStyle Hidden -File "'+$scriptFile+'"') -WorkingDirectory $PSScriptRoot
 $principal=New-ScheduledTaskPrincipal -UserId $user -LogonType Interactive -RunLevel Limited
-$trigger=New-ScheduledTaskTrigger -AtLogOn -User $user
+$trigger=@(
+    (New-ScheduledTaskTrigger -AtLogOn -User $user),
+    (New-ScheduledTaskTrigger -Once -At (Get-Date).AddMinutes(1) -RepetitionInterval ([TimeSpan]::FromMinutes(1)))
+)
 $settings=New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable -ExecutionTimeLimit ([TimeSpan]::Zero) -RestartCount 3 -RestartInterval ([TimeSpan]::FromMinutes(1)) -MultipleInstances IgnoreNew
 $report=[ordered]@{time=(Get-Date -Format o);task=$taskName;user=$user;installed=$false;error=''}
 try{

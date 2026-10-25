@@ -70,11 +70,13 @@
 ## 日常使用与自动运行
 
 - `BatteryGuard-PerformanceTelemetry`：用户登录时启动性能后台。
-- `BatteryGuard-BackgroundRecovery`：用户登录时维护观察器、充电守护、电源事件、FN+X、刷新率和风扇后台。
-- `HKCU Run\BatteryGuardPanel`：登录后以托盘形式启动界面；点击托盘即可打开。
+- `BatteryGuard-BackgroundRecovery`：用户登录时启动，并由计划任务每分钟兜底检查；进程异常结束后可重新启动。运行中每 10 秒维护托盘及各项后台，托盘恢复不受硬件后台启动失败或损坏的界面缓存阻塞。
+- `agent/panel-preferences.json`：保存是否自动启动托盘，由界面和计划任务共同读取，避免不同进程的注册表视图差异导致设置丢失。`HKCU Run\BatteryGuardPanel` 保留为兼容启动入口；点击托盘即可打开界面。
 - `BatteryGuard-NativeStatus`：可选，系统启动时以 SYSTEM 身份运行原生保护提示助手。
 
 关闭窗口收起到托盘；显式退出关闭本次登录会话的界面，硬件策略仍运行。安装、卸载入口均不执行电脑重启、注销或休眠。
+
+已安装旧版本、需要修复重启后托盘缺失时，请先替换为新版源码，打开界面后将“登录自动启动”重新启用一次以保存偏好，再运行 `InstallBackgroundRecovery.ps1` 更新恢复任务；无需重装性能驱动或重启电脑。
 
 默认风扇曲线：
 
