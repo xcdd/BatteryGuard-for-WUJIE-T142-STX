@@ -12,15 +12,15 @@ $files=@(
     'FanControl.ps1','FanCurvePolicy.ps1','FanCurveWorker.ps1',
     'FirmwarePerformanceMode.ps1','FirmwarePowerPolicy.ps1',
     'InstallBackgroundRecovery.ps1','InstallNativeProtection.ps1','InstallPerformanceTelemetry.ps1',
-    'PanelStartup.ps1','PanelStatusPolicy.ps1','PerformanceControl.ps1','PerformanceFeedback.ps1',
+    'PanelStartup.ps1','PanelStatusPolicy.ps1','PanelPowerStatus.ps1','PerformanceControl.ps1','PerformanceFeedback.ps1',
     'PowerEventGuard.ps1','PowerSourceState.ps1','TypeCPower.ps1','Start-PerformanceControl.bat','ui\ControlPanel.xaml',
     'driver\WindowsBatteryStatus.cs','driver\T142Charger.cs','driver\T142Fan.cs','driver\DisplayRefresh.cs',
-    'driver\RaplPower.cs','driver\PerformancePowerPolicy.cs','driver\OemSurfaceMailbox.cs','driver\PerformanceTelemetry.cs','driver\SourceRootConfiguration.cs',
+    'driver\RaplPower.cs','driver\PerformancePowerPolicy.cs','driver\OemSurfaceMailbox.cs','driver\PerformanceTelemetry.cs','driver\SourceRootConfiguration.cs','driver\SmuTableRefresh.cs',
     'driver\license.txt','driver\ryzenadj\LICENSE','driver\ryzenadj\manifest.json',
     'licenses\wujie-fan-control-MIT.txt','defaults\charge-settings.json','defaults\fan-settings.json',
     'agent\ObserveChargeSession.ps1','agent\NativeProtectionHelper.ps1',
     'agent\TestSourceRootConfiguration.ps1','agent\TestPerformancePowerPolicy.ps1','agent\TestOemSurfaceMailbox.ps1',
-    'agent\TestFanFullDuty.ps1','agent\VerifyFanPolicy.ps1','agent\TestRaplPower.ps1','agent\TestPanelStatusRecovery.ps1','agent\TestTrayStartupRecovery.ps1','agent\TestPanelStartupRegistry.ps1'
+    'agent\TestFanFullDuty.ps1','agent\VerifyFanPolicy.ps1','agent\TestRaplPower.ps1','agent\TestPanelStatusRecovery.ps1','agent\TestTrayStartupRecovery.ps1','agent\TestPanelStartupRegistry.ps1','agent\TestSmuTableRefresh.ps1','agent\TestPanelPowerStatus.ps1'
 )
 foreach($relative in $files){if(-not(Test-Path -LiteralPath (Join-Path $sourceRoot $relative) -PathType Leaf)){throw ('Allowlisted source is missing: '+$relative)}}
 New-Item -ItemType Directory -Path $destinationRoot -Force|Out-Null

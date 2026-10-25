@@ -137,8 +137,7 @@ namespace BatteryGuard {
             lastRequestedSkinPowerW=target.SkinPowerW;
             int result=set_apu_slow_limit(access,(uint)(target.ApuSlowW*1000));
             if(result!=0)throw new InvalidOperationException("set_apu_slow_limit failed: "+result);
-            result=refresh_table(access);
-            if(result!=0)throw new InvalidOperationException("SMU readback after policy write failed: "+result);
+            SmuTableRefresh.Refresh(delegate{return refresh_table(access);});
             stapm=get_stapm_limit(access);fast=get_fast_limit(access);slow=get_slow_limit(access);
             float apu=get_apu_slow_limit(access),thermal=get_tctl_temp(access);
             PowerReadbackState classification=PerformancePowerPolicy.ClassifyReadback(target,stapm,fast,slow,apu,thermal);
@@ -185,8 +184,7 @@ namespace BatteryGuard {
                         try{
                         try{firmwareOwned=firmwareGate.WaitOne(0);}catch(AbandonedMutexException){firmwareOwned=true;}
                         if(!firmwareOwned){Thread.Sleep(250);continue;}
-                        result=refresh_table(access);
-                        if(result!=0)throw new InvalidOperationException("SMU table refresh failed: "+result);
+                        SmuTableRefresh.Refresh(delegate{return refresh_table(access);});
                         float stapm=get_stapm_limit(access),slow=get_slow_limit(access),fast=get_fast_limit(access);
                         if(float.IsNaN(stapm)||float.IsNaN(slow)||float.IsNaN(fast)||stapm<1||stapm>150||slow<1||slow>150||fast<1||fast>200)
                             throw new InvalidOperationException("Invalid power limit telemetry");
@@ -226,13 +224,17 @@ namespace BatteryGuard {
                             rapl_supported=raplSupported,rapl_package_power_w=raplPower,
                             rapl_source="AMD PACKAGE_ENERGY_STATUS 0xC001029B / monotonic interval",
                             rapl_energy_unit=raplSupported?(int?)raplEnergyUnit:null});
+                        }catch(SmuTableTransferDeferredException deferred){
+                            RecordPolicyEvent("smu_table_transfer_deferred",new {message=deferred.Message,source=source,mode=mode});
+                            Save(new {time=DateTime.UtcNow.ToString("o"),pid=System.Diagnostics.Process.GetCurrentProcess().Id,smu_readback=false,error="",control_state="table_transfer_deferred",notice=deferred.Message,last_policy_readback=lastPolicyReadback});
                         }catch(OemMailboxBusyException busy){
                             RecordPolicyEvent("firmware_mailbox_occupied",new {message=busy.Message,source=source,mode=mode});
                             Save(new {time=DateTime.UtcNow.ToString("o"),pid=System.Diagnostics.Process.GetCurrentProcess().Id,smu_readback=false,error="",control_state="firmware_busy",notice=busy.Message,last_policy_readback=lastPolicyReadback});
                         }catch(Exception sampleError){
                             RecordPolicyEvent("native_power_session_ended",new {error=sampleError.Message,last_policy_readback=lastPolicyReadback});
                             Save(new {time=DateTime.UtcNow.ToString("o"),pid=System.Diagnostics.Process.GetCurrentProcess().Id,smu_readback=false,error=sampleError.Message,last_policy_readback=lastPolicyReadback});
-                            // A failed native SMU session must not be remapped or retried.
+                            // Native failures other than a rejected table transfer
+                            // must not be remapped or retried.
                             // The mode-transition incident stalled firmware after this path.
                             throw;
                         }finally{if(firmwareOwned)firmwareGate.ReleaseMutex();}

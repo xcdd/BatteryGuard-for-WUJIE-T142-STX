@@ -17,7 +17,7 @@ foreach($file in $scripts){
 if($parseFailures.Count){throw ($parseFailures -join [Environment]::NewLine)}
 'PASS: PowerShell parse ('+$scripts.Count+' files)'
 $exe=Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe'
-foreach($test in @('TestSourceRootConfiguration.ps1','TestPerformancePowerPolicy.ps1','TestOemSurfaceMailbox.ps1','TestFanFullDuty.ps1','VerifyFanPolicy.ps1','TestRaplPower.ps1','TestPanelStatusRecovery.ps1','TestTrayStartupRecovery.ps1','TestPanelStartupRegistry.ps1')){
+foreach($test in @('TestSourceRootConfiguration.ps1','TestPerformancePowerPolicy.ps1','TestOemSurfaceMailbox.ps1','TestFanFullDuty.ps1','VerifyFanPolicy.ps1','TestRaplPower.ps1','TestPanelStatusRecovery.ps1','TestTrayStartupRecovery.ps1','TestPanelStartupRegistry.ps1','TestSmuTableRefresh.ps1','TestPanelPowerStatus.ps1')){
     & $exe -NoProfile -File (Join-Path $PSScriptRoot ('agent\'+$test))
     if($LASTEXITCODE-ne 0){throw ('Software test failed: '+$test)}
 }

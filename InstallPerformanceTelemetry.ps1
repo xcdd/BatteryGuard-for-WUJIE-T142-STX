@@ -41,7 +41,7 @@ try{
     }
     if(Test-Path -LiteralPath $application){Remove-Item -LiteralPath $application}
     [IO.File]::WriteAllText((Join-Path $destination 'source-root.txt'),$PSScriptRoot,[Text.UTF8Encoding]::new($false))
-    $sources=@((Join-Path $PSScriptRoot 'driver\SourceRootConfiguration.cs'),(Join-Path $PSScriptRoot 'driver\PerformancePowerPolicy.cs'),(Join-Path $PSScriptRoot 'driver\RaplPower.cs'),(Join-Path $PSScriptRoot 'driver\OemSurfaceMailbox.cs'),(Join-Path $PSScriptRoot 'driver\PerformanceTelemetry.cs'))
+    $sources=@((Join-Path $PSScriptRoot 'driver\SourceRootConfiguration.cs'),(Join-Path $PSScriptRoot 'driver\PerformancePowerPolicy.cs'),(Join-Path $PSScriptRoot 'driver\RaplPower.cs'),(Join-Path $PSScriptRoot 'driver\OemSurfaceMailbox.cs'),(Join-Path $PSScriptRoot 'driver\SmuTableRefresh.cs'),(Join-Path $PSScriptRoot 'driver\PerformanceTelemetry.cs'))
     Add-Type -Path $sources -ReferencedAssemblies System.dll,System.Management.dll,System.Web.Extensions.dll -OutputAssembly $application -OutputType WindowsApplication
     if(Test-Path -LiteralPath (Join-Path $destination 'stop')){Remove-Item -LiteralPath (Join-Path $destination 'stop')}
     $action=New-ScheduledTaskAction -Execute $application

@@ -7,6 +7,7 @@ $root=$PSScriptRoot
 . (Join-Path $root 'FirmwarePowerPolicy.ps1')
 . (Join-Path $root 'PanelStartup.ps1')
 . (Join-Path $root 'PanelStatusPolicy.ps1')
+. (Join-Path $root 'PanelPowerStatus.ps1')
 $panelRuntimePath=Join-Path $root 'agent\panel-runtime.json'
 $panelCommandPath=Join-Path $root 'agent\panel-command.json'
 $sid=[Security.Principal.WindowsIdentity]::GetCurrent().User.Value
@@ -120,18 +121,22 @@ function Update-PerformancePanel {
             $controls.Performance.IsEnabled=[bool]$live.online
             $budget=Get-FirmwarePowerBudget $live
             $script:panelState.firmware_budget=$budget
-            $controls.PowerPeak.Text=$(if($budget){$budget.fast_ppt_limit_w.ToString('0.#')+' W'}else{'暂不可用'})
-            $controls.Budget.Text=$(if($budget){'原厂配置 · 持续 '+$budget.sustained_limit_w.ToString('0.#')+' W · '+$source}else{'等待功率上限回读'})
             $telemetryFile=Join-Path $env:ProgramFiles 'BatteryGuardPerformanceTelemetry\status.json'
             $script:panelState.power_limit=$null
+            $telemetry=$null;$telemetryAlive=$false
             if(Test-Path -LiteralPath $telemetryFile){
                 $telemetry=Read-ControlJson $telemetryFile
-                $telemetryAge=((Get-Date)-[datetime]$telemetry.time).TotalSeconds
-                if($telemetry.smu_readback -and -not $telemetry.error -and $telemetryAge-ge 0 -and $telemetryAge-lt 15 -and (Test-ControlProcessAlive ([int]$telemetry.pid))){
-                    $controls.PowerPeak.Text=([double]$telemetry.fast_ppt_limit_w).ToString('0.#')+' W'
-                    $controls.Budget.Text='当前生效 · 持续 '+([double]$telemetry.sustained_limit_w).ToString('0.#')+' W · '+$source
-                    $script:panelState.power_limit=$telemetry
-                }
+                if($telemetry.pid){$telemetryAlive=Test-ControlProcessAlive ([int]$telemetry.pid)}
+            }
+            $powerView=Get-PanelPowerStatus $live $telemetry $telemetryAlive
+            $script:panelState.power_limit_view=$powerView
+            if($powerView.verified){
+                $controls.PowerPeak.Text=([double]$powerView.fast_ppt_limit_w).ToString('0.#')+' W'
+                $controls.Budget.Text='当前生效 · 持续 '+([double]$powerView.sustained_limit_w).ToString('0.#')+' W · '+$source
+                $script:panelState.power_limit=$telemetry
+            }else{
+                $controls.PowerPeak.Text=$(if($powerView.state-in @('failed','stopped')){'功率后台已停止'}else{'等待实际回读'})
+                $controls.Budget.Text=$(if($null-ne $powerView.requested_fast_w){'目标：持续 '+$powerView.requested_sustained_w+' W · 短时 '+$powerView.requested_fast_w+' W · 尚未确认生效'}else{'当前功率上限尚未确认'})
             }
             $current=[int]$live.current_ma
             $controls.BatteryState.Text=$live.soc.ToString()+'% · '+$(if(-not $live.online){'离电使用'}elseif($current-gt 50){'正在充电'}elseif($current-lt -50){'接电 · 电池仍在放电'}else{'接电 · 未充电'})
